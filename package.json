@@ -29,7 +29,9 @@
         "dev": "webpack -w",
         "test": "jest --colors",
         "clean": "rimraf ./dist",
-        "dist": "webpack"
+        "dist": "webpack",
+        "build": "webpack --mode production",
+        "start": "webpack serve --mode development"
     },
     "license": "Apache-2.0",
     "dependencies": {
