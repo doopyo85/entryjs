@@ -745,20 +745,15 @@ module.exports = {
                 class: 'calc',
                 isNotFor: [],
                 func(sprite, script) {
-                    let value = script.getNumberValue('LEFTHAND', script);
+                    const value = script.getNumberValue('LEFTHAND', script);
                     let operator = script.getField('VALUE', script);
                     const xRangeCheckList = ['asin_radian', 'acos_radian'];
                     if (xRangeCheckList.indexOf(operator) > -1 && (value > 1 || value < -1)) {
                         throw new Error('x range exceeded');
                     }
 
-                    const needToConvertList = ['sin', 'cos', 'tan'];
                     if (operator.indexOf('_')) {
                         operator = operator.split('_')[0];
-                    }
-
-                    if (needToConvertList.indexOf(operator) > -1) {
-                        value = Entry.toRadian(value);
                     }
 
                     let returnVal = 0;
@@ -782,6 +777,11 @@ module.exports = {
                         case 'acos':
                         case 'atan':
                             returnVal = Entry.toDegrees(Math[operator](value));
+                            break;
+                        case 'sin':
+                        case 'cos':
+                        case 'tan':
+                            returnVal = Entry.preciseTrig(value, operator);
                             break;
                         case 'unnatural': {
                             returnVal = new BigNumber(value).minus(Math.floor(value));
@@ -2060,15 +2060,7 @@ module.exports = {
                 func(sprite, script) {
                     const originStr = script.getStringValue('STRING', script);
                     const targetStr = script.getStringValue('TARGET', script);
-
-                    let count = 0;
-                    const substrLength = targetStr.length;
-                    for (let i = 0; i <= originStr.length - substrLength; i++) {
-                        if (originStr.substring(i, i + substrLength) === targetStr) {
-                            count++;
-                        }
-                    }
-                    return count;
+                    return originStr.split(targetStr).length - 1;
                 },
                 syntax: {
                     js: [],
@@ -2250,16 +2242,10 @@ module.exports = {
                 class: 'calc_string',
                 isNotFor: [],
                 func(sprite, script) {
-                    const oldWord = script
-                        .getStringValue('OLD_WORD', script)
-                        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-                    return script
-                        .getStringValue('STRING', script)
-                        .replace(
-                            new RegExp(oldWord, 'gm'),
-                            script.getStringValue('NEW_WORD', script)
-                        );
+                    const oldWord = script.getStringValue('OLD_WORD', script);
+                    const newWord = script.getStringValue('NEW_WORD', script);
+                    const originalString = script.getStringValue('STRING', script);
+                    return originalString.split(oldWord).join(newWord);
                 },
                 syntax: {
                     js: [],
@@ -2600,7 +2586,6 @@ module.exports = {
                 },
                 func(sprite, script) {
                     const bool = script.getValue('BOOLEAN', script);
-                    console.log('bool', bool);
                     if (Boolean(bool)) {
                         return 'TRUE';
                     }
